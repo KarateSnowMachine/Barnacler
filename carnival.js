@@ -1,4 +1,23 @@
+hack_pagination = function() {
+/*
+	// this is an alternate (and more direct method of doing the same thing)
+	sailingResultsMgr.GetResults({pageNumber:1, pageSize:"100"})
+	return;
+*/ 
 
+	var changeIdx = 3; 
+	var pagination_elem = $("select#sel-sortcount"); 
+	pagination_elem.change(function() {
+		console.log("change triggered", $("select#sel-sortcount").val()); 
+	});
+ 
+	console.log("set 100 per page"); 
+	pagination_elem[0][changeIdx].value="100";
+	console.log("change selection") 
+	pagination_elem.attr('selectedIndex',changeIdx); 
+	console.log("executing .change()"); 
+	pagination_elem.change(); 
+}
 
 extract_meaty_bits = function() {
 	var day_regex =/(\d+)\s+Day\s+[A-z ]+\s+from\s+([A-z, ()]+)/g
@@ -45,10 +64,8 @@ extract_meaty_bits = function() {
 
 
 
-var casper = require("casper").create({ 
-	clientScripts:	["jquery-1.8.2.min.js"]	,
-	verbose: true
-		});
+var casper = require("casper").create(); 
+
 print_error = function(msg, backtrace) {
 	this.echo("=========================");
 	this.echo("PAGE.ERROR:");
@@ -78,12 +95,25 @@ function() {
 }); 
 
 casper.waitWhileVisible("#SearchResultsLoader");
-
-casper.then(function() { 
+casper.wait(1000, function() {
 		this.capture("carnival_pre.png");
-		this.echo("OK, page is loaded"); 
+		this.echo("Changing pagination to 100 per page"); 
+		this.evaluate(hack_pagination); 
+		this.capture("carnival_page.png");
+		}); 
+//casper.waitUntilVisible("div.results5"); 
+casper.waitUntilVisible("ul.pagination"); 
+
+casper.then(function() {
+		this.echo("OK, all results loaded"); 
+		});
+
+
+casper.wait(500, function() { 
 		var all_results_from_page = this.evaluate(extract_meaty_bits); 
+		this.echo("=============================="); 
 		this.echo(JSON.stringify(all_results_from_page)); 
+		this.echo("=============================="); 
 		this.capture("carnival.png"); 
 /*
 		this.echo(this.fetchText("table.content.left"));
