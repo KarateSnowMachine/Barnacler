@@ -25,9 +25,26 @@ extract_meaty_bits = function() {
 	var main_block = $("li.search-results-item");
 	main_block.each(function(x,e) {
 		var results = {}
+		results["ports"] = []; 
+		results["price"] = [];
+		results["date"] = [];
 		$(e).css("border", "3px solid red");
 
 		$(e).find("table.content.left").each(function(i,y2) {
+ 			$(y2).find("a.departurePort").each(function(j,y) {
+				results["departurePort"] = $(y).text(); 		
+				$(y).css("background-color", "#ccffcc");
+			});
+			$(y2).find("a.ship").each(function(j,y) {
+				results["ship"] = $(y).text(); 		
+				$(y).css("background-color", "#ccffcc");
+			});
+			$(y2).find("a.ports").each(function(j,y) {
+				results["ports"].push($(y).text());
+				$(y).css("background-color", "#ccffcc");
+			});
+
+
 			$(y2).find("h3").each(function(j, y) {
 				$(y).css("border", "3px solid green")
 				var day_location = $(y).text();
@@ -36,8 +53,7 @@ extract_meaty_bits = function() {
 				console.log("'"+day_location+"'"); 
 				results["day_location"] = day_location;
 			}); 
-			results["price"] = [];
-			results["date"] = [];
+
 
 			$(e).find("a.book").each(function(i,y) {
 
