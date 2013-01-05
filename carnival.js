@@ -96,11 +96,13 @@ casper.on('remote.message', function(msg) {
 
 casper.on("page.error", print_error); 
 casper.on("error", print_error); 
+var fs = require("fs");
+var util = require("utils"); 
+var output_filename = "json_data/data.json";
 
 var URL = "http://www.carnival.com/BookingEngine/SailingSearch/Search2/?dat=062013,052013,042013,032013,022013,012013,122012&datTo=062013&numGuests=2&dur=D2&dest=C&StateCode=MD&PastGuest=Y&PGEnable=Y";
 //#URL="http://www.google.com";
-casper.start(URL, 
-function() {
+casper.start(URL, function() {
 	this.echo("Started"); 
 	var x = this.evaluate(function() {
 		return jQuery; 
@@ -108,6 +110,10 @@ function() {
 	if (x) {
 		this.echo("jQuery is loaded"); 
 	}
+	if(casper.cli.has(0)) {
+		output_filename = this.cli.get(0); 
+	}
+	this.echo("Writing data to file: '"+output_filename+"'"); 
 }); 
 
 casper.waitWhileVisible("#SearchResultsLoader");
@@ -127,9 +133,8 @@ casper.then(function() {
 
 casper.wait(500, function() { 
 		var all_results_from_page = this.evaluate(extract_meaty_bits); 
-		this.echo("=============================="); 
-		this.echo(JSON.stringify(all_results_from_page)); 
-		this.echo("=============================="); 
+		fs.write(output_filename, JSON.stringify(all_results_from_page), 'w')
+		this.echo("wrote output file '"+output_filename+"'"); 
 		this.capture("carnival.png"); 
 /*
 		this.echo(this.fetchText("table.content.left"));
