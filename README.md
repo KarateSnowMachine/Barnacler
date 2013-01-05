@@ -1,4 +1,6 @@
-## Barnacler ##
+Barnacler
+=========
+
  A casperJS script to scrape prices off the Carnival website.
 
 ## Usage ##
@@ -11,5 +13,4 @@ The data flow is as such:
 
 From there the data can be visualized through a tool of your choice. If you have R installed you can use the prices.R script
 I have provided. 
-
 
