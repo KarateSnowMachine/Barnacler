@@ -5,6 +5,8 @@ import re
 import datetime
 import pdb
 import sqlite3
+import tempfile
+import subprocess
  
 
 verbose=True
@@ -14,14 +16,18 @@ class Cruise:
 	def __init__(self, departurePort, ship, price, portsOfCall, lengthLocationString, departureDateString, comment=""):
 		self.departurePort = departurePort
 		self.ship=ship
-		self.price=float(price[1:].replace(",",""))
+		try:
+			self.price=float(price[1:].replace(",",""))
+		except ValueError:
+			self.price=-1.0;
+
 		self.portsOfCall= portsOfCall
 		self.cruiseLength = None
 		self.returnDate = None
 		self.departureDate = None
 		self.departureDateFromString(departureDateString)
 		self.arrivalDateFromString(lengthLocationString)
-		self.scrapeDate = datetime.datetime.now().strftime("%b %d %Y")
+		self.scrapeDate = datetime.datetime.now().strftime("%Y-%m-%d")
 		self.comment = comment;
 
 	def departureDateFromString(self, dateStr): 
@@ -62,22 +68,41 @@ def execWrapper(cursor, sqlStr):
 	cursor.execute(sqlStr); 
 
 if __name__ == "__main__":
-	#TODO: optparse
-	options = {}; 
-	options["json_filename"] = "json_data/test.json";
-	options["sqlite_filename"] = "test.sqlite"; 
-	options["init_database"] = True; 
-	options["comment"] = "a comment here"; 
-	
-	text_data = open(options["json_filename"]).read()
+
+	from optparse import OptionParser
+
+	opt_parser = OptionParser("Usage: %prog [options]")
+	opt_parser.add_option("-i", "--json-file", dest="json_filename", type="string", help="Force insert this json file instead of getting new data")
+	opt_parser.add_option("-o", "--sqlite_filename", dest="sqlite_filename", type="string", help="sqlite file to write data to", default="cruises.sqlite")
+	opt_parser.add_option("-c", "--comment", dest="comment", type="string", help="a comment to be stored with the data (ex: 'start of sale'", default="")
+	opt_parser.add_option("-I", "--init", dest="init_database",action="store_true", help="run CREATE queries to setup tables before inserting data")
+	opt_parser.add_option("-s", "--scrape", dest="scrape",action="store_true", help="scrape carnival website for new data")
+
+
+
+	(options, args) = opt_parser.parse_args()
+	tmpFile = tempfile.NamedTemporaryFile(mode="r+b", dir="json_data/", delete=False); 
+	if options.scrape:
+		cmdStr = "casperjs carnival.js %s"%tmpFile.name
+		pdb.set_trace();
+		if verbose: 
+			print "Launching scraper: '%s'"%cmdStr
+		# launch the harvester 
+		stdoutStr = subprocess.Popen(cmdStr.split(" "), stdout=subprocess.PIPE).communicate()[0]; 
+		if verbose: 
+			print stdoutStr
+		textData = tmpFile.read(); 
+	elif options.json_filename:
+		textData = open(options.json_filename).read()
+
 	if verbose:
-		print "Read json: %s"%(text_data)
-	json_data = json.loads(text_data); 
+		print "Read json: %s"%(textData)
+	json_data = json.loads(textData); 
 	if verbose: 
 		pretty_print(json_data); 
-	dbCon = sqlite3.connect(options["sqlite_filename"]); 
+	dbCon = sqlite3.connect(options.sqlite_filename); 
 	cursor = dbCon.cursor();
-	if options["init_database"]: 
+	if options.init_database: 
 		execWrapper(cursor, jsonToCruiseObj(json_data[0], json_data[0]["date"][0], json_data[0]["price"][0]).getTableCreateString("cruiseData")) 
 	
 	for x in json_data: 
@@ -89,7 +114,7 @@ if __name__ == "__main__":
 		for date,price in zip(x["date"], x["price"]): 
 			if verbose: 
 				print "\t\t%s\t%s"%(date,price)
-			c = jsonToCruiseObj(x, date, price, options["comment"])
+			c = jsonToCruiseObj(x, date, price, options.comment)
 			if verbose: 
 				print "INSERT: %s"%(str(c))
 			execWrapper(cursor, c.getInsertString("cruiseData"))
