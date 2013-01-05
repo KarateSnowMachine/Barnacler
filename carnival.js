@@ -1,3 +1,14 @@
+/* 
+ *  
+ * This file is part of Barnacler.
+ * 
+ * Copyright 2012 Paul Rosenfeld
+ * 
+ * This code is released under a GPLv3 license. See the COPYING and LICENSE
+ * files in this directory for more details. 
+ * 
+ */ 
+
 hack_pagination = function() {
 /*
 	// this is an alternate (and more direct method of doing the same thing)
