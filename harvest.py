@@ -39,7 +39,7 @@ class Cruise:
 		self.departureDate = None
 		self.departureDateFromString(departureDateString)
 		self.arrivalDateFromString(lengthLocationString)
-		self.scrapeDate = datetime.datetime.now().strftime("%Y-%m-%d")
+		self.scrapeDate = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		self.comment = comment;
 
 	def departureDateFromString(self, dateStr): 
@@ -86,17 +86,18 @@ if __name__ == "__main__":
 	opt_parser = OptionParser("Usage: %prog [options]")
 	opt_parser.add_option("-i", "--json-file", dest="json_filename", type="string", help="Force insert this json file instead of getting new data")
 	opt_parser.add_option("-o", "--sqlite_filename", dest="sqlite_filename", type="string", help="sqlite file to write data to", default="cruises.sqlite")
-	opt_parser.add_option("-c", "--comment", dest="comment", type="string", help="a comment to be stored with the data (ex: 'start of sale'", default="")
+	opt_parser.add_option("-c", "--comment", dest="comment", type="string", help="a comment to be stored with the data (ex: 'start of sale')", default="")
 	opt_parser.add_option("-I", "--init", dest="init_database",action="store_true", help="run CREATE queries to setup tables before inserting data")
 	opt_parser.add_option("-s", "--scrape", dest="scrape",action="store_true", help="scrape carnival website for new data")
 
 
 
 	(options, args) = opt_parser.parse_args()
+	if verbose:
+		print "comment: ",options.comment
 	tmpFile = tempfile.NamedTemporaryFile(mode="r+b", dir="json_data/", delete=False); 
 	if options.scrape:
 		cmdStr = "casperjs carnival.js %s"%tmpFile.name
-		pdb.set_trace();
 		if verbose: 
 			print "Launching scraper: '%s'"%cmdStr
 		# launch the harvester 
